@@ -1,0 +1,8 @@
+numpy
+matplotlib
+tqdm
+keras
+tensorflow
+scikit-learn
+imageio
+np_utils

@@ -1,0 +1,50 @@
+
+Arquivos Utilizados e suas funções:
+-----------------------------
+
+ls_solver.c           => modulo cotendo os calculos usados na fatoração LU e retrosubstituição
+  encontra_Max        - Função utilizada para buscar o maior valor de pivoteamento
+  troca_linha         - Procedimento para troca de duas linhas em uma matriz
+  fatoracao_LU        - Procedimento para realizar a triangularização de uma matriz com pivoteamento
+  retrossubs_up       - Solucionador de sistema linear com a matriz triangular superior
+  retrossubs_down     - Solucionador de sistema linear com a matriz triangular inferior
+  vetor_troca_pivoteamento - Procedimento de troca de valores do vetor
+  atualiza_hessiana   - Procedimento de atualização da hessiana com a biblioteca libmatheval
+  atualiza_gradiente  - Procedimento de atualização do gradiente com a biblioteca libmatheval
+
+matrix.c              => modulo contendo os calculos das operações efetuadas sobre matrizes e vetores
+
+metodos.c             => modulo contendo a execução dos metodos utilizados
+  str_equation        - Procedimento que retorna a função de Rosenbrock com parametros
+  pointer_equation    - Procedimento de inicialização dos ponteiros de equações da biblioteca libmatheval
+  save_state          - Salva a cada iteração os valores de X encontrados a cada método
+  newton_modificado   - Implementação do método newton_modificado para busca de pontosCriticos
+  quasi-newton        - Implementação do método quasi-newton para busca de pontosCriticos
+
+quasi-newton.c        => modulo contendo a implementação do calculo usado para obter a hessiana usada no metodo quasi-newton
+  calcula_quasi_newton - Procedimento de calculos para gerar nova hessiana
+
+pontosCriticos.c      => arquivo principal, lê parametros executa metodos e escreve resultado
+
+input.txt             => arquivo contendo lista de entradas
+
+metricas.sh           => script utilizado para gerar estatisticas dos metodos com a biblioteca LIKWID
+
+-----------------------------
+
+
+Execução do Script:
+-----------------------------
+O script que gera as métricas sobre os métodos implementados pode ser executado com
+$> ./metricas.sh
+
+Deste modo, o arquivo input.txt é usado como padrao para a execução do programa.
+Ao executar o script, as estatisticas do LIKWID serão impressas na tela e um novo arquivo contendo 
+o resultado da execução do pontosCriticos será criado com o nome saida_pontosCriticos_<data em segundos>.
+
+Também é possível executar o script com
+$> ./metricas.sh <arquivo de configuracoes>
+Assim, o pontosCriticos é executado usando como parametro cada linha do arquivo passado como entrada 
+
+(O programa também pode ser executado sem o uso do script, conforme especificado no enunciado)
+-----------------------------

@@ -9,7 +9,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJ)
 
-debug: CFLAGS += -g -DDEBUG -DEBUGMATRIX 
+debug: CFLAGS += -g -DDEBUGMATRIX 
 debug: all
 
 run: all

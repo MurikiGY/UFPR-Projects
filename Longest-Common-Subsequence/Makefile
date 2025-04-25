@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -O3
 LDLIBS = -lm -lrt
-SRC = $(wildcard *.c)
+SRC = $(wildcard ./src/*.c)
 OBJ = $(SRC:.c=.o)
 TARGET = lcs
 
@@ -16,7 +16,7 @@ run: all
 	./$(TARGET)
 
 clean:
-	-rm -f *.o vgcore* 
+	-rm -f $(OBJ) vgcore* 
 
 purge: clean
 	-rm -f $(TARGET)

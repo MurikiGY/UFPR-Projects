@@ -1,7 +1,10 @@
+#include <bits/types/struct_timeval.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+#include <omp.h>
+
+#include "src/chron.h"
 
 #ifndef max
 #define max( a, b ) ( ((a) > (b)) ? (a) : (b) )
@@ -131,10 +134,11 @@ void freeScoreMatrix(mtype **scoreMatrix, int sizeB) {
 	free(scoreMatrix);
 }
 
+
+
 int main(int argc, char ** argv) {
   // Exec time
-  struct timeval stop, start;
-  gettimeofday(&start, NULL);
+  struct timeval global_time = start_timer();
 
 	// sequence pointers for both sequences
 	char *seqA, *seqB;
@@ -143,21 +147,30 @@ int main(int argc, char ** argv) {
 	int sizeA, sizeB;
 
 	//read both sequences
+  struct timeval read_time = start_timer();
 	seqA = read_seq("fileA.in");
 	seqB = read_seq("fileB.in");
+  show_time("Strings read time", read_time);
 
 	//find out sizes
 	sizeA = strlen(seqA);
 	sizeB = strlen(seqB);
 
 	// allocate LCS score matrix
+  struct timeval matrix_alloc_time = start_timer();
 	mtype ** scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
+  show_time("matrix allocate time", matrix_alloc_time);
 
 	//initialize LCS score matrix
+  struct timeval matrix_init_time = start_timer();
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
+  show_time("matrix init time", matrix_init_time);
 
 	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
+  struct timeval lcs_time = start_timer();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+  show_time("LCS time", lcs_time);
+
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
@@ -168,13 +181,15 @@ int main(int argc, char ** argv) {
 	//print score
 	printf("\nScore: %d\n", score);
 
+  // ---
+  
+  // Show exec time
+  show_time("Gloal time", global_time);
+
 	//free score matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
-
-  // Show exec time
-  gettimeofday(&stop, NULL);
-  long milliseconds = (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000;
-  printf("took %lu ms\n", milliseconds);
+  free(seqA);
+  free(seqB);
 
 	return EXIT_SUCCESS;
 }

@@ -61,10 +61,10 @@ char* read_seq(char *fname) {
 }
 
 mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
-	int i;
+	//int i;
 	//Allocate memory for LCS score matrix
 	mtype ** scoreMatrix = (mtype **) malloc((sizeB + 1) * sizeof(mtype *));
-	for (i = 0; i < (sizeB + 1); i++)
+	for (int i = 0; i < (sizeB + 1); i++)
 		scoreMatrix[i] = (mtype *) malloc((sizeA + 1) * sizeof(mtype));
 	return scoreMatrix;
 }
@@ -81,9 +81,9 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 }
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
-	int i, j;
-	for (i = 1; i < sizeB + 1; i++) {
-		for (j = 1; j < sizeA + 1; j++) {
+	//int i, j;
+	for (int i = 1; i < sizeB + 1; i++) {
+		for (int j = 1; j < sizeA + 1; j++) {
 			if (seqA[j - 1] == seqB[i - 1]) {
 				/* if elements in both sequences match,
 				 the corresponding score will be the score from
@@ -91,8 +91,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 				scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
 			} else {
 				/* else, pick the maximum value (score) from left and upper elements*/
-				scoreMatrix[i][j] =
-						max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
+				scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
 			}
 		}
 	}
@@ -148,6 +147,8 @@ int main(int argc, char ** argv) {
 
 	//read both sequences
   struct timeval read_time = start_timer();
+	//seqA = read_seq("./inputs/fileA.in");
+	//seqB = read_seq("./inputs/fileB.in");
 	seqA = read_seq("fileA.in");
 	seqB = read_seq("fileB.in");
   show_time("Strings read time", read_time);

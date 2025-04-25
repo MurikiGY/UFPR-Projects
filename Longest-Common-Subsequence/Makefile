@@ -1,6 +1,6 @@
 CC = gcc
 CFLAGS = -Wall -O3
-LDLIBS = -lm -lrt
+LDLIBS = -lm -fopenmp
 SRC = $(wildcard ./src/*.c)
 OBJ = $(SRC:.c=.o)
 TARGET = lcs

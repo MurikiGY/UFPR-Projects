@@ -64,8 +64,10 @@ mtype ** allocateScoreMatrix(int sizeA, int sizeB) {
 	//int i;
 	//Allocate memory for LCS score matrix
 	mtype ** scoreMatrix = (mtype **) malloc((sizeB + 1) * sizeof(mtype *));
+
 	for (int i = 0; i < (sizeB + 1); i++)
 		scoreMatrix[i] = (mtype *) malloc((sizeA + 1) * sizeof(mtype));
+
 	return scoreMatrix;
 }
 
@@ -82,19 +84,42 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 	//int i, j;
-	for (int i = 1; i < sizeB + 1; i++) {
-		for (int j = 1; j < sizeA + 1; j++) {
-			if (seqA[j - 1] == seqB[i - 1]) {
-				/* if elements in both sequences match,
-				 the corresponding score will be the score from
-				 previous elements + 1*/
-				scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-			} else {
-				/* else, pick the maximum value (score) from left and upper elements*/
-				scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
-			}
-		}
-	}
+  
+  //for (int i = 1; i < sizeB + 1; i++) {
+	//	for (int j = 1; j < sizeA + 1; j++) {
+	//		if (seqA[j - 1] == seqB[i - 1]) {
+	//			/* if elements in both sequences match,
+	//			 the corresponding score will be the score from
+	//			 previous elements + 1*/
+	//			scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+	//		} else {
+	//			/* else, pick the maximum value (score) from left and upper elements*/
+	//			scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]);
+	//		}
+	//	}
+	//}
+
+  // Increasing diagonal
+  for (int i=1; i<=sizeA ;i++){
+    for (int j=1; j<=i && j<=sizeB ;j++){
+      if (seqA[i-j] == seqB[j-1])
+        scoreMatrix[j][i-j+1] = scoreMatrix[j-1][i-j] + 1;
+      else
+        scoreMatrix[j][i-j+1] = max(scoreMatrix[j-1][i-j+1], scoreMatrix[j][i-j]);
+    }
+  }
+
+  // Decreasing diagonal
+  int i = 2;
+  for (; i<=sizeB ;i++){
+    for (int j=sizeA, k=i; k<=sizeB && j>0 ;j--, k++){
+      if (seqA[j-1] == seqB[k-1])
+        scoreMatrix[k][j] = scoreMatrix[k-1][j-1] + 1;
+      else
+        scoreMatrix[k][j] = max(scoreMatrix[k-1][j], scoreMatrix[k][j-1]);
+    }
+  }
+
 	return scoreMatrix[sizeB][sizeA];
 }
 void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,

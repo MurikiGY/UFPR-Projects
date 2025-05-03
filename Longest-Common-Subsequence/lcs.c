@@ -85,6 +85,51 @@ void initScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB) {
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 	//int i, j;
   
+  #pragma omp parallel //num_threads(4)
+  {
+    int id = omp_get_thread_num();
+    int nthrds = omp_get_num_threads();
+
+    for (int i=id+1; i<=sizeB ;i+=nthrds){
+      int j;
+
+      // Increasing
+      for (j=1-id; j<nthrds-id ;j++){
+        if (j>0){
+	        if (seqA[j - 1] == seqB[i - 1]) { 
+            scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+	        } else { 
+            scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); 
+          }
+        }
+        //#pragma omp barrier
+      }
+
+      // Constant
+      for (; j<=sizeA-id ;j++){
+	      if (seqA[j - 1] == seqB[i - 1]) { 
+          scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+	      } else { 
+          scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); 
+        }
+        //#pragma omp barrier
+      }
+      
+      // Decreasing
+      for (; j<sizeA+nthrds-id ;j++){
+        if (j<=sizeA){
+	        if (seqA[j - 1] == seqB[i - 1]) { 
+            scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
+	        } else { 
+            scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); 
+          }
+        }
+        //#pragma omp barrier
+      }
+      //#pragma omp barrier
+    }
+  }
+
   //for (int i = 1; i < sizeB + 1; i++) {
 	//	for (int j = 1; j < sizeA + 1; j++) {
 	//		if (seqA[j - 1] == seqB[i - 1]) {
@@ -99,26 +144,26 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 	//	}
 	//}
 
-  // Increasing diagonal
-  for (int i=1; i<=sizeA ;i++){
-    for (int j=1; j<=i && j<=sizeB ;j++){
-      if (seqA[i-j] == seqB[j-1])
-        scoreMatrix[j][i-j+1] = scoreMatrix[j-1][i-j] + 1;
-      else
-        scoreMatrix[j][i-j+1] = max(scoreMatrix[j-1][i-j+1], scoreMatrix[j][i-j]);
-    }
-  }
+  //// Increasing diagonal
+  //for (int i=1; i<=sizeA ;i++){
+  //  for (int j=1; j<=i && j<=sizeB ;j++){
+  //    if (seqA[i-j] == seqB[j-1])
+  //      scoreMatrix[j][i-j+1] = scoreMatrix[j-1][i-j] + 1;
+  //    else
+  //      scoreMatrix[j][i-j+1] = max(scoreMatrix[j-1][i-j+1], scoreMatrix[j][i-j]);
+  //  }
+  //}
 
-  // Decreasing diagonal
-  int i = 2;
-  for (; i<=sizeB ;i++){
-    for (int j=sizeA, k=i; k<=sizeB && j>0 ;j--, k++){
-      if (seqA[j-1] == seqB[k-1])
-        scoreMatrix[k][j] = scoreMatrix[k-1][j-1] + 1;
-      else
-        scoreMatrix[k][j] = max(scoreMatrix[k-1][j], scoreMatrix[k][j-1]);
-    }
-  }
+  //// Decreasing diagonal
+  //int i = 2;
+  //for (; i<=sizeB ;i++){
+  //  for (int j=sizeA, k=i; k<=sizeB && j>0 ;j--, k++){
+  //    if (seqA[j-1] == seqB[k-1])
+  //      scoreMatrix[k][j] = scoreMatrix[k-1][j-1] + 1;
+  //    else
+  //      scoreMatrix[k][j] = max(scoreMatrix[k-1][j], scoreMatrix[k][j-1]);
+  //  }
+  //}
 
 	return scoreMatrix[sizeB][sizeA];
 }

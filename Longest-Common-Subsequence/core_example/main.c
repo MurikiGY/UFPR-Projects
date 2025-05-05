@@ -1,24 +1,75 @@
 #include <stdio.h>
+#include <omp.h>
 
 int main(){
-  int sizeA = 4;
-  int sizeB = 4;
+  int sizeA = 8;
+  int sizeB = 6;
 
-  // Increasing diagonal
-  for (int i=1; i<=sizeA ;i++){
-    for (int j=1; j<=i && j<=sizeB ;j++){
-      printf("M[%d][%d], ", j, i-j+1);
+  int block = 3;
+ 
+  int i, j;
+  // Matrix blocking
+  for (j=1; j<(sizeB-(sizeB%block)) ;j+=block){
+
+    // Increasing
+    for (i=1; i<block ;i++){
+      //#pragma omp parallel for
+      for (int k=i; k>0 ;k--){
+        printf("M[%d][%d], ", j+i-k, k);
+      }
+      printf("\n");
     }
-    printf("\n");
+
+    // Constant
+    for (; i<=sizeA ;i++){
+      //#pragma omp parallel for
+      for (int k=j; k<j+block ;k++){
+        printf("M[%d][%d], ", k, j+i-k);
+      }
+      printf("\n");
+    }
+
+    // Decreasing
+    for (int l=j+1; l<j+block ;l++, i++){
+      //#pragma omp parallel for
+      for (int k=l; k<j+block ;k++){
+        printf("M[%d][%d], ", k, j+i-k);
+      }
+      printf("\n");
+    }
   }
 
-  int i = 2;
-  for (; i<=sizeB ;i++){
-    for (int j=sizeA, k=i; k<=sizeB && j>0 ;j--, k++){
-      printf("M[%d][%d], ", k, j);
+  //printf("AHHHHH\n");
+  if (j<sizeB){
+    block = sizeB % block;
+    // Rest of matrix
+    for (i=1; i<block ;i++){
+      //#pragma omp parallel for
+      for (int k=i; k>0 ;k--){
+        printf("M[%d][%d], ", j+i-k, k);
+      }
+      printf("\n");
     }
-    printf("\n");
+
+    // Constant
+    for (; i<=sizeA ;i++){
+      //#pragma omp parallel for
+      for (int k=j; k<j+block ;k++){
+        printf("M[%d][%d], ", k, j+i-k);
+      }
+      printf("\n");
+    }
+
+    // Decreasing
+    for (int l=j+1; l<j+block ;l++, i++){
+      //#pragma omp parallel for
+      for (int k=l; k<j+block ;k++){
+        printf("M[%d][%d], ", k, j+i-k);
+      }
+      printf("\n");
+    }
   }
+
 
   return 0;
 }

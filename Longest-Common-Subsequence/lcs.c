@@ -115,76 +115,68 @@ int shortLCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB
 
 
 int myLCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
-  int num_th = 8;
 
-  #pragma omp parallel num_threads(num_th)
-  {
-    int id = omp_get_thread_num();
-    int nthrds = omp_get_num_threads();
+  int block = 4;
+  //int block = omp_get_num_threads();
 
-    for (int i=id+1; i<=(sizeB-(sizeB % nthrds)) ;i+=nthrds){
-      int j;
+  int i, j;
+  // Matrix blocking
+  for (j=1; j<(sizeB-(sizeB%block)) ;j+=block){
 
-      // Increasing
-      for (j=1-id; j<nthrds-id ;j++){
-        if (j>0){
-          if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-          } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        }
-        #pragma omp barrier
+    // Increasing
+    for (i=1; i<block ;i++){
+      //#pragma omp parallel for num_threads(block)
+      for (int k=i; k>0 ;k--){
+        if (seqA[k-1] == seqB[j+i-k-1]) { scoreMatrix[j+i-k][k] = scoreMatrix[j+i-k-1][k-1] + 1; 
+        } else { scoreMatrix[j+i-k][k] = max(scoreMatrix[j+i-k-1][k], scoreMatrix[j+i-k][k-1]); }
       }
+    }
 
-      // Constant
-      for (; j<=sizeA-id ;j++){
-        if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-        } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        #pragma omp barrier
+    // Constant
+    for (; i<=sizeA ;i++){
+      //#pragma omp parallel for num_threads(block)
+      for (int k=j; k<j+block ;k++){
+        if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
+        } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
       }
-      
-      // Decreasing
-      for (; j<sizeA+nthrds-id ;j++){
-        if (j<=sizeA){
-          if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-          } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        }
-        #pragma omp barrier
+    }
+
+    // Decreasing
+    for (int l=j+1; l<j+block ;l++, i++){
+      //#pragma omp for
+      for (int k=l; k<j+block ;k++){
+        if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
+        } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
       }
     }
   }
 
-  // Process the rest of the matrix in parallel
-  int rest = sizeB%num_th;
-  if (rest > 0){
-    #pragma omp parallel num_threads(rest)
-    {
-      int id = omp_get_thread_num();
-      int nthrds = omp_get_num_threads();
-      int i = num_th * (sizeB/num_th) + id + 1;
-      int j = 1 - id;
-
-      // Increasing
-      for (; j<nthrds-id ;j++){
-        if (j>0){
-          if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-          } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        }
-        #pragma omp barrier
+  if (j<=sizeB){
+    block = sizeB % block;
+    // Rest of matrix
+    for (i=1; i<block ;i++){
+      //#pragma omp for
+      for (int k=i; k>0 ;k--){
+        if (seqA[k-1] == seqB[j+i-k-1]) { scoreMatrix[j+i-k][k] = scoreMatrix[j+i-k-1][k-1] + 1;
+        } else { scoreMatrix[j+i-k][k] = max(scoreMatrix[j+i-k-1][k], scoreMatrix[j+i-k][k-1]); }
       }
+    }
 
-      // Constant
-      for (; j<=sizeA-id ;j++){
-        if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-        } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        #pragma omp barrier
+    // Constant
+    for (; i<=sizeA ;i++){
+      //#pragma omp for
+      for (int k=j; k<j+block ;k++){
+        if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
+        } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
       }
-      
-      // Decreasing
-      for (; j<sizeA+nthrds-id ;j++){
-        if (j<=sizeA){
-          if (seqA[j - 1] == seqB[i - 1]) { scoreMatrix[i][j] = scoreMatrix[i - 1][j - 1] + 1;
-          } else { scoreMatrix[i][j] = max(scoreMatrix[i-1][j], scoreMatrix[i][j-1]); }
-        }
-        #pragma omp barrier
+    }
+
+    // Decreasing
+    for (int l=j+1; l<j+block ;l++, i++){
+      //#pragma omp for
+      for (int k=l; k<j+block ;k++){
+        if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
+        } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
       }
     }
   }
@@ -309,7 +301,7 @@ int main(int argc, char ** argv) {
 
   //fill up the rest of the matrix and return final score (element locate at the last line and collumn)
   struct timeval lcs_time = start_timer();
-  mtype score = shortLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+  mtype score = myLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
   show_time("LCS time", lcs_time);
 
 

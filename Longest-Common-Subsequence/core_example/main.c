@@ -2,10 +2,10 @@
 #include <omp.h>
 
 int main(){
-  int sizeA = 8;
+  int sizeA = 10;
   int sizeB = 6;
 
-  int block = 3;
+  int block = 8;
  
   int i, j;
   // Matrix blocking
@@ -40,7 +40,7 @@ int main(){
   }
 
   //printf("AHHHHH\n");
-  if (j<sizeB){
+  if (j<=sizeB){
     block = sizeB % block;
     // Rest of matrix
     for (i=1; i<block ;i++){

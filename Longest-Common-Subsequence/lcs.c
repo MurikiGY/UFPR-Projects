@@ -1,4 +1,3 @@
-#include <bits/types/struct_timeval.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,70 +115,62 @@ int shortLCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB
 
 int myLCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 
-  int block = 4;
+  //#pragma omp parallel num_threads(7)
+  //{
   //int block = omp_get_num_threads();
+  int nthds = 8;
+  int block = sizeB / nthds;
 
   int i, j;
   // Matrix blocking
   for (j=1; j<(sizeB-(sizeB%block)) ;j+=block){
 
     // Increasing
-    for (i=1; i<block ;i++){
-      //#pragma omp parallel for num_threads(block)
-      for (int k=i; k>0 ;k--){
+    for (i=1; i<block ;i++)
+      #pragma omp parallel for num_threads(nthds)
+      for (int k=i; k>0 ;k--)
         if (seqA[k-1] == seqB[j+i-k-1]) { scoreMatrix[j+i-k][k] = scoreMatrix[j+i-k-1][k-1] + 1; 
         } else { scoreMatrix[j+i-k][k] = max(scoreMatrix[j+i-k-1][k], scoreMatrix[j+i-k][k-1]); }
-      }
-    }
 
     // Constant
-    for (; i<=sizeA ;i++){
-      //#pragma omp parallel for num_threads(block)
-      for (int k=j; k<j+block ;k++){
+    for (; i<=sizeA ;i++)
+      #pragma omp parallel for num_threads(nthds)
+      for (int k=j; k<j+block ;k++)
         if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
         } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
-      }
-    }
 
     // Decreasing
-    for (int l=j+1; l<j+block ;l++, i++){
-      //#pragma omp for
-      for (int k=l; k<j+block ;k++){
+    for (int l=j+1; l<j+block ;l++, i++)
+      #pragma omp parallel for num_threads(nthds)
+      for (int k=l; k<j+block ;k++)
         if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
         } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
-      }
-    }
   }
 
   if (j<=sizeB){
     block = sizeB % block;
     // Rest of matrix
-    for (i=1; i<block ;i++){
-      //#pragma omp for
-      for (int k=i; k>0 ;k--){
+    for (i=1; i<block ;i++)
+      #pragma omp parallel for num_threads(block)
+      for (int k=i; k>0 ;k--)
         if (seqA[k-1] == seqB[j+i-k-1]) { scoreMatrix[j+i-k][k] = scoreMatrix[j+i-k-1][k-1] + 1;
         } else { scoreMatrix[j+i-k][k] = max(scoreMatrix[j+i-k-1][k], scoreMatrix[j+i-k][k-1]); }
-      }
-    }
 
     // Constant
-    for (; i<=sizeA ;i++){
-      //#pragma omp for
-      for (int k=j; k<j+block ;k++){
+    for (; i<=sizeA ;i++)
+      #pragma omp parallel for num_threads(block)
+      for (int k=j; k<j+block ;k++)
         if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
         } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
-      }
-    }
 
     // Decreasing
-    for (int l=j+1; l<j+block ;l++, i++){
-      //#pragma omp for
-      for (int k=l; k<j+block ;k++){
+    for (int l=j+1; l<j+block ;l++, i++)
+      #pragma omp parallel for num_threads(block)
+      for (int k=l; k<j+block ;k++)
         if (seqA[j+i-k-1] == seqB[k-1]) { scoreMatrix[k][j+i-k] = scoreMatrix[k-1][j+i-k-1] + 1;
         } else { scoreMatrix[k][j+i-k] = max(scoreMatrix[k-1][j+i-k], scoreMatrix[k][j+i-k-1]); }
-      }
-    }
   }
+  //}
 
   return scoreMatrix[sizeB][sizeA];
 }
@@ -188,7 +179,7 @@ int myLCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 
 int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
   //int i, j;
-  
+
   for (int i = 1; i < sizeB + 1; i++) {
     for (int j = 1; j < sizeA + 1; j++) {
       if (seqA[j - 1] == seqB[i - 1]) {
@@ -228,7 +219,7 @@ int LCS(mtype ** scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB) {
 }
 
 void printMatrix(char * seqA, char * seqB, mtype ** scoreMatrix, int sizeA,
-    int sizeB) {
+                 int sizeB) {
   int i, j;
 
   //print header
@@ -315,7 +306,7 @@ int main(int argc, char ** argv) {
   printf("\nScore: %d\n", score);
 
   // ---
-  
+
   // Show exec time
   show_time("Gloal time", global_time);
 

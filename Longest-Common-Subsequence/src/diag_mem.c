@@ -53,64 +53,69 @@ void diagInitScoreMatrix(mtype ** scoreMatrix, int sizeA, int sizeB){
 }
 
 
-int diagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB){
-  int i;
-  int nthrds = 8;
+int diagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char * seqA, char *seqB, int nthds){
 
-  // Increasing
-  for (i=1; i<sizeB ;i++){
-    #pragma omp parallel for num_threads(nthrds) schedule(static)
-    for (int k=1; k<=i ;k++){
-      // i = k,   j = i-k+1;
-      int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-      // i = k-1, j = i-k+1;
-      int lin2 = i; int col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
-      // i = k,   j = i-k;
-      int lin3 = i; int col3 = k - (lin3 - sizeA)*(lin3/sizeA);
-      // i = k-1, j = i-k;
-      int lin4 = i-1; int col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
-      //printf("M[%2d,%2d], ", k, i-k+1);
+  #pragma omp parallel num_threads(nthds)
+  {
+    int i;
+    int lin, lin2, lin3, lin4;
+    int col, col2, col3, col4;
 
-      if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
-      } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+    // Increasing
+    for (i=1; i<sizeB ;i++){
+      #pragma omp for schedule(auto)
+      for (int k=1; k<=i ;k++){
+        // i = k,     j = i-k+1;
+        lin = i+1;    col = k - (lin - sizeA)*(lin/sizeA);
+        // i = k-1,   j = i-k+1;
+        lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
+        // i = k,     j = i-k;
+        lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/sizeA);
+        // i = k-1,   j = i-k;
+        lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
+        //printf("M[%2d,%2d], ", k, i-k+1);
+
+        if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
+        } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+      }
     }
-  }
 
-  // Constant
-  for (; i<sizeA ;i++){
-    #pragma omp parallel for num_threads(nthrds) schedule(static)
-    for (int k=1; k<=sizeB ;k++){
-      // i = k,   j = i-k+1;
-      int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-      // i = k-1, j = i-k+1;
-      int lin2 = i; int col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
-      // i = k,   j = i-k;
-      int lin3 = i; int col3 = k - (lin3 - sizeA)*(lin3/sizeA);
-      // i = k-1, j = i-k;
-      int lin4 = i-1; int col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
-      //printf("M[%2d,%2d], ", k, i-k+1);
+    // Constant
+    for (; i<sizeA ;i++){
+      #pragma omp for schedule(auto)
+      for (int k=1; k<=sizeB ;k++){
+        // i = k,     j = i-k+1;
+        lin = i+1;    col = k - (lin - sizeA)*(lin/sizeA);
+        // i = k-1,   j = i-k+1;
+        lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
+        // i = k,     j = i-k;
+        lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/sizeA);
+        // i = k-1,   j = i-k;
+        lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
+        //printf("M[%2d,%2d], ", k, i-k+1);
 
-      if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
-      } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+        if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
+        } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+      }
     }
-  }
 
-  // Decreasing
-  for (int l=1; l<=sizeB ;l++, i++){
-    #pragma omp parallel for num_threads(nthrds) schedule(static)
-    for (int k=l; k<=sizeB ;k++){
-      // i = k,   j = i-k+1;
-      int lin = i+1; int col = k - (lin - sizeA)*(lin/(sizeA+1));
-      // i = k-1, j = i-k+1;
-      int lin2 = i; int col2 = (k-1) - (lin2 - sizeA)*(lin2/(sizeA+1));
-      // i = k,   j = i-k;
-      int lin3 = i; int col3 = k - (lin3 - sizeA)*(lin3/(sizeA+1));
-      // i = k-1, j = i-k;
-      int lin4 = i-1; int col4 = (k-1) - (lin4 - sizeA)*(lin4/(sizeA+1));
-      //printf("M[%2d,%2d], ", k, i-k+1);
+    // Decreasing
+    for (int l=1; l<=sizeB ;l++, i++){
+      #pragma omp for schedule(auto)
+      for (int k=l; k<=sizeB ;k++){
+        // i = k,     j = i-k+1;
+        lin = i+1;    col = k - (lin - sizeA)*(lin/(sizeA+1));
+        // i = k-1,   j = i-k+1;
+        lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/(sizeA+1));
+        // i = k,     j = i-k;
+        lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/(sizeA+1));
+        // i = k-1,   j = i-k;
+        lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/(sizeA+1));
+        //printf("M[%2d,%2d], ", k, i-k+1);
 
-      if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
-      } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+        if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
+        } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
+      }
     }
   }
 

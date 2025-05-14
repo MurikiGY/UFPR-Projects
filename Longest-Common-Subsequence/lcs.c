@@ -63,7 +63,7 @@ char* read_seq(char *fname) {
 }
 
 
-void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB){
+void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int nthds){
 
   // Swap strings to matrix always have more columns than lines
   if (sizeB > sizeA){
@@ -84,9 +84,10 @@ void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB){
   //show_time("Matrix init time", matrix_init_time);
 
 	//fill up the rest of the matrix and return final score
-  struct timeval lcs_time = start_timer();
-	mtype score = diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
-  show_time("LCS time", lcs_time);
+  //struct timeval lcs_time = start_timer();
+	mtype score = diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, nthds);
+	//diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, nthds);
+  //show_time("LCS time", lcs_time);
 
 	//print score and free matrix
 	printf("Score: %d\n", score);
@@ -146,9 +147,10 @@ void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
   //show_time("Matrix init time", matrix_init_time);
 
 	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
-  struct timeval lcs_time = start_timer();
+  //struct timeval lcs_time = start_timer();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
-  show_time("LCS time", lcs_time);
+	//LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+  //show_time("LCS time", lcs_time);
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
@@ -165,7 +167,7 @@ void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
 
 int main(int argc, char ** argv) {
   // Global execution time
-  //struct timeval global_time = start_timer();
+  struct timeval global_time = start_timer();
 
   // Sequence pointers and sizes for both sequences
   char *seqA, *seqB;
@@ -174,25 +176,26 @@ int main(int argc, char ** argv) {
   //read both sequences
   //struct timeval read_time = start_timer();
   if (argc < 2){
-    seqA = read_seq("./fileA.in");
-    seqB = read_seq("./fileB.in");
-    printf("--> A: %s\n", "./fileA.in");
-    printf("--> B: %s\n", "./fileB.in");
+    seqA = read_seq("./inputs/fileA.in");
+    seqB = read_seq("./inputs/fileB.in");
+    //printf("--> A: %s\n", "./fileA.in");
+    //printf("--> B: %s\n", "./fileB.in");
   } else {
     seqA = read_seq(argv[1]);
     seqB = read_seq(argv[2]);
-    printf("--> A: %s\n", argv[1]);
-    printf("--> B: %s\n", argv[2]);
+    //printf("--> A: %s\n", argv[1]);
+    //printf("--> B: %s\n", argv[2]);
   }
-  //show_time("Strings read time", read_time);
-
   //find out sizes
   sizeA = strlen(seqA);
   sizeB = strlen(seqB);
+  //show_time("Strings read time", read_time);
 
   // ----- Start tests
   
   int op = 1;
+  if (argc == 4)
+    op = 3;
   switch (op) {
     case 1:
       //printf("--> Running original LCS\n");
@@ -206,15 +209,16 @@ int main(int argc, char ** argv) {
 
     case 3:
       //printf("--> Running diagonal memory LCS\n");
-      diagLCS(sizeA, sizeB, seqA, seqB);
+      if (argc == 4) { diagLCS(sizeA, sizeB, seqA, seqB, atoi(argv[3])); }
+      else { diagLCS(sizeA, sizeB, seqA, seqB, 8); }
     break;
   }
 
   // ----- End tests
 
   // Show exec time
-  //show_time("Gloal time", global_time);
-  printf("\n");
+  show_time("Gloal time", global_time);
+  //printf("\n");
 
   //free seq
   free(seqA);

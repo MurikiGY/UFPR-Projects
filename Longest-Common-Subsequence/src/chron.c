@@ -11,10 +11,10 @@ struct timeval start_timer(){
 }
 
 void show_time(char *desc, struct timeval start){
-  //if (desc)
-  //  printf("%s: ", desc);
-  //else
-  //  printf("took: ");
+  if (desc)
+    printf("%s: ", desc);
+  else
+    printf("took: ");
 
   // Show difference time
   struct timeval stop;
@@ -22,7 +22,7 @@ void show_time(char *desc, struct timeval start){
   long milliseconds = (stop.tv_sec - start.tv_sec) * 1000 + (stop.tv_usec - start.tv_usec) / 1000;
 
   //printf("%lu ms\n", milliseconds);
-  fprintf(stderr, "%lu\n", milliseconds);
+  printf("%lu\n", milliseconds);
 }
 
 

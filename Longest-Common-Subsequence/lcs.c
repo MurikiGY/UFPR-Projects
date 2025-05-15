@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 #include <omp.h>
 
 #include "src/chron.h"
@@ -74,20 +75,19 @@ void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int nthds){
   //printf("--> SizeB: %d\n", sizeB);
 
 	// allocate LCS score matrix
-  //struct timeval matrix_alloc_time = start_timer();
+  struct timeval matrix_alloc_time = start_timer();
 	mtype **scoreMatrix = diagAllocateScoreMatrix(sizeA, sizeB);
-  //show_time("Matrix allocate time", matrix_alloc_time);
+  show_time("Matrix allocate time", matrix_alloc_time);
 
 	//initialize LCS score matrix
-  //struct timeval matrix_init_time = start_timer();
+  struct timeval matrix_init_time = start_timer();
 	diagInitScoreMatrix(scoreMatrix, sizeA, sizeB);
-  //show_time("Matrix init time", matrix_init_time);
+  show_time("Matrix init time", matrix_init_time);
 
 	//fill up the rest of the matrix and return final score
-  //struct timeval lcs_time = start_timer();
+  struct timeval lcs_time = start_timer();
 	mtype score = diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, nthds);
-	//diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, nthds);
-  //show_time("LCS time", lcs_time);
+  show_time("LCS time", lcs_time);
 
 	//print score and free matrix
 	printf("Score: %d\n", score);
@@ -137,20 +137,19 @@ void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
   //printf("--> SizeB: %d\n", sizeB);
 
 	// allocate LCS score matrix
-  //struct timeval matrix_alloc_time = start_timer();
+  struct timeval matrix_alloc_time = start_timer();
 	mtype **scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
-  //show_time("Matrix allocate time", matrix_alloc_time);
+  show_time("Matrix allocate time", matrix_alloc_time);
 
 	//initialize LCS score matrix
-  //struct timeval matrix_init_time = start_timer();
+  struct timeval matrix_init_time = start_timer();
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
-  //show_time("Matrix init time", matrix_init_time);
+  show_time("Matrix init time", matrix_init_time);
 
 	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
-  //struct timeval lcs_time = start_timer();
+  struct timeval lcs_time = start_timer();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
-	//LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
-  //show_time("LCS time", lcs_time);
+  show_time("LCS time", lcs_time);
 
 	/* if you wish to see the entire score matrix,
 	 for debug purposes, define DEBUGMATRIX. */
@@ -174,7 +173,7 @@ int main(int argc, char ** argv) {
   int sizeA, sizeB;
 
   //read both sequences
-  //struct timeval read_time = start_timer();
+  struct timeval read_time = start_timer();
   if (argc < 2){
     seqA = read_seq("./inputs/fileA.in");
     seqB = read_seq("./inputs/fileB.in");
@@ -189,7 +188,7 @@ int main(int argc, char ** argv) {
   //find out sizes
   sizeA = strlen(seqA);
   sizeB = strlen(seqB);
-  //show_time("Strings read time", read_time);
+  show_time("Strings read time", read_time);
 
   // ----- Start tests
   
@@ -198,7 +197,7 @@ int main(int argc, char ** argv) {
     op = 3;
   switch (op) {
     case 1:
-      //printf("--> Running original LCS\n");
+      printf("--> Running original LCS\n");
       originalLCS(sizeA, sizeB, seqA, seqB);
     break;
 
@@ -208,17 +207,25 @@ int main(int argc, char ** argv) {
     break;
 
     case 3:
-      //printf("--> Running diagonal memory LCS\n");
-      if (argc == 4) { diagLCS(sizeA, sizeB, seqA, seqB, atoi(argv[3])); }
-      else { diagLCS(sizeA, sizeB, seqA, seqB, 8); }
+      if (argc == 4) { 
+        printf("--> Running diagonal memory LCS with %d threads\n", atoi(argv[3]));
+        diagLCS(sizeA, sizeB, seqA, seqB, atoi(argv[3])); 
+      } else { 
+        printf("--> Running diagonal memory LCS with %d threads\n", 8);
+        diagLCS(sizeA, sizeB, seqA, seqB, 8); }
     break;
   }
 
   // ----- End tests
 
   // Show exec time
-  show_time("Gloal time", global_time);
+  //show_time("Gloal time", global_time);
   //printf("\n");
+  // Show difference time
+  struct timeval stop;
+  gettimeofday(&stop, NULL);
+  long milliseconds = (stop.tv_sec - global_time.tv_sec) * 1000 + (stop.tv_usec - global_time.tv_usec) / 1000;
+  fprintf(stderr, "%lu\n", milliseconds);
 
   //free seq
   free(seqA);

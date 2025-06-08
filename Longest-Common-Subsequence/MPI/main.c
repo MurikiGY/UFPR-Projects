@@ -25,4 +25,3 @@ int main(int argc, char** argv) {
     // Finalize the MPI environment.
     MPI_Finalize();
 }
-

@@ -19,4 +19,4 @@
 # -----
 
 # Run the MPI program
-mpirun -np 12 --map-by ppr:6:node ./lcs
+mpirun -np 12 --map-by ppr:6:node ./pi

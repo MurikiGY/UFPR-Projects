@@ -3,7 +3,7 @@ CFLAGS = -Wall -O3
 LDLIBS = -lm
 SRC = $(wildcard ./src/*.c)
 OBJ = $(SRC:.c=.o)
-TARGET = lcs
+TARGET = main
 
 all: $(TARGET)
 

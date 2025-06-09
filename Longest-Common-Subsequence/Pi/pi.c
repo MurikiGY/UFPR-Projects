@@ -1,5 +1,8 @@
 #include <stdio.h>
+#include <sys/time.h>
 #include <mpi.h>
+
+#include "./src/chron.h"
 
 #define STD_TAG 0
 
@@ -8,6 +11,8 @@ static long num_steps = 1200000;
 double step;
 
 int main(int argc, char **argv) {
+  // Global execution time
+  struct timeval global_time = start_timer();
   // Pi vars
   double pi, sum = 0.0;
   // MPI vars
@@ -41,17 +46,13 @@ int main(int argc, char **argv) {
     pi *= step;
 
     printf("Pi value: %f\n", pi);
-  }
 
-  //if (my_rank != 0) {
-  //  sprintf(msg, "I’m alive!");
-  //  MPI_Send(msg, strlen(msg) + 1, MPI_CHAR, 0, STD_TAG, MPI_COMM_WORLD);
-  //} else {
-  //  for (int i = 1; i < n_procs; i++) {
-  //    MPI_Recv(msg, 100, MPI_CHAR, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  //    printf("Proc %d: %s \n", status.MPI_SOURCE, msg);
-  //  }
-  //}
+    // Show global time
+    struct timeval stop;
+    gettimeofday(&stop, NULL);
+    long milliseconds = (stop.tv_sec - global_time.tv_sec) * 1000 + (stop.tv_usec - global_time.tv_usec) / 1000;
+    fprintf(stderr, "Global time: %lu\n", milliseconds);
+  }
 
   MPI_Finalize();
 

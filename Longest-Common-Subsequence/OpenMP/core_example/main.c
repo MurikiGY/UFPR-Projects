@@ -8,8 +8,8 @@
 
 
 int main(){
-  int sizeA = 4;
-  int sizeB = 4;
+  int sizeA = 10;
+  int sizeB = 7;
 
   if (sizeA < sizeB)
     swap(sizeA, sizeB);

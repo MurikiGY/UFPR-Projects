@@ -8,8 +8,8 @@
 
 
 int main(){
-  int sizeA = 10;
-  int sizeB = 7;
+  int sizeA = 7;
+  int sizeB = 5;
 
   if (sizeA < sizeB)
     swap(sizeA, sizeB);
@@ -24,24 +24,24 @@ int main(){
   k = 0;
   for (l=1; l<=sizeB ;l++, k++){
     M[k] = calloc(l, sizeof(int));
-    printf("[%2d] -> ", k);
-    for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
-    printf("[%2d]\n", l-1);
+    //printf("[%2d] -> ", k);
+    //for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
+    //printf("[%2d]\n", l-1);
   }
 
   for (m=1; m<=sizeA-sizeB+1 ;m++, k++){
     M[k] = calloc(l, sizeof(int));
-    printf("[%2d] -> ", k);
-    for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
-    printf("[%2d]\n", l-1);
+    //printf("[%2d] -> ", k);
+    //for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
+    //printf("[%2d]\n", l-1);
   }
 
   l--;
   for (; l >=1 ;l--, k++){
     M[k] = calloc(l, sizeof(int));
-    printf("[%2d] -> ", k);
-    for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
-    printf("[%2d]\n", l-1);
+    //printf("[%2d] -> ", k);
+    //for (int a=0; a<l-1 ;a++) { printf("[%2d] -> ", a); }
+    //printf("[%2d]\n", l-1);
   }
 
   // ---
@@ -49,30 +49,30 @@ int main(){
   int i;
   // Increasing
   for (i=1; i<sizeB ;i++){
+    // diag_len = i
     for (int k=1; k<=i ;k++){
       int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-      printf("M[%2d,%2d], ", k, i-k+1);
-      printf("M[%2d,%2d]\n", lin, col);
+      printf("M[%2d,%2d], M[%2d,%2d]\n", k, i-k+1, lin, col);
     }
     printf("\n");
   }
 
   // Constant
   for (; i<sizeA ;i++){
+    // diag_len = sizeB
     for (int k=1; k<=sizeB ;k++){
       int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-      printf("M[%2d,%2d], ", k, i-k+1);
-      printf("M[%2d,%2d]\n", lin, col);
+      printf("M[%2d,%2d], M[%2d,%2d]\n", k, i-k+1, lin, col);
     }
     printf("\n");
   }
 
   // Decreasing
   for (int l=1; l<=sizeB ;l++, i++){
+    // diag_len = sizeB - l + 1
     for (int k=l; k<=sizeB ;k++){
       int lin = i+1; int col = k - (lin - sizeA)*(lin/(sizeA+1));
-      printf("M[%2d,%2d], ", k, i-k+1);
-      printf("M[%2d,%2d]\n", lin, col);
+      printf("M[%2d,%2d], M[%2d,%2d]\n", k, i-k+1, lin, col);
     }
     printf("\n");
   }

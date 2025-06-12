@@ -61,15 +61,10 @@ int diagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char * seqA, char *seq
   // Increasing
   for (i=1; i<sizeB ;i++){
     for (int k=1; k<=i ;k++){
-      // i = k,     j = i-k+1;
       lin = i+1;    col = k - (lin - sizeA)*(lin/sizeA);
-      // i = k-1,   j = i-k+1;
       lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
-      // i = k,     j = i-k;
       lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/sizeA);
-      // i = k-1,   j = i-k;
       lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
-      //printf("M[%2d,%2d], ", k, i-k+1);
 
       if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
       } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
@@ -79,15 +74,10 @@ int diagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char * seqA, char *seq
   // Constant
   for (; i<sizeA ;i++){
     for (int k=1; k<=sizeB ;k++){
-      // i = k,     j = i-k+1;
       lin = i+1;    col = k - (lin - sizeA)*(lin/sizeA);
-      // i = k-1,   j = i-k+1;
       lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);
-      // i = k,     j = i-k;
       lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/sizeA);
-      // i = k-1,   j = i-k;
       lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);
-      //printf("M[%2d,%2d], ", k, i-k+1);
 
       if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
       } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }
@@ -97,15 +87,10 @@ int diagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char * seqA, char *seq
   // Decreasing
   for (int l=1; l<=sizeB ;l++, i++){
     for (int k=l; k<=sizeB ;k++){
-      // i = k,     j = i-k+1;
       lin = i+1;    col = k - (lin - sizeA)*(lin/(sizeA+1));
-      // i = k-1,   j = i-k+1;
       lin2 = i;     col2 = (k-1) - (lin2 - sizeA)*(lin2/(sizeA+1));
-      // i = k,     j = i-k;
       lin3 = i;     col3 = k - (lin3 - sizeA)*(lin3/(sizeA+1));
-      // i = k-1,   j = i-k;
       lin4 = i-1;   col4 = (k-1) - (lin4 - sizeA)*(lin4/(sizeA+1));
-      //printf("M[%2d,%2d], ", k, i-k+1);
 
       if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = scoreMatrix[lin4][col4] + 1;
       } else { scoreMatrix[lin][col] = max(scoreMatrix[lin2][col2], scoreMatrix[lin3][col3]); }

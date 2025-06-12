@@ -163,18 +163,22 @@ int main(int argc, char** argv) {
 
   // --- Comunication
 
-  if (my_rank != 0){
-    MPI_Send(&score, 1, MPI_SHORT_INT, 0, STD_TAG, MPI_COMM_WORLD);
-  } else {
-    printf("Rank 0: %d\n", score);
-    for (int i=1; i<n_tasks ;i++){
-      MPI_Recv(&score, 1, MPI_SHORT_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-      printf("Rank %d: %d\n", status.MPI_SOURCE, score);
-    }
-
-    // Show exec time
+  printf("Rank %d: %d\n", my_rank, score);
+  if (my_rank == 0)
     show_time("Gloal time", global_time);
-  }
+
+  //if (my_rank != 0){
+  //  MPI_Send(&score, 1, MPI_SHORT_INT, 0, STD_TAG, MPI_COMM_WORLD);
+  //} else {
+  //  printf("Rank 0: %d\n", score);
+  //  for (int i=1; i<n_tasks ;i++){
+  //    MPI_Recv(&score, 1, MPI_SHORT_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+  //    printf("Rank %d: %d\n", status.MPI_SOURCE, score);
+  //  }
+
+  //  // Show exec time
+  //  show_time("Gloal time", global_time);
+  //}
 
   // --- Finished
 

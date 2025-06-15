@@ -8,10 +8,10 @@
 
 #define STD_TAG 0
 
-void process(int my_rank, int it_rank, int sizeA, int i){
+void process(int my_rank, int it_rank, int sizeA, int i, int *nums){
   int k = it_rank + 1;
   int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-  printf("Rank %d, M[%2d,%2d], M[%2d,%2d]\n", my_rank, k, i-k+1, lin, col);
+  printf("Rank %d, M[%2d,%2d], M[%2d,%2d], num[0] = %d, num[1] = %d\n", my_rank, k, i-k+1, lin, col, nums[0], nums[1]);
 }
 
 
@@ -27,16 +27,18 @@ void increasing(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
     for (int it_rank=my_rank; it_rank<*i ;it_rank+=n_tasks){
       if (it_rank == 0){
         // Only send
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB){
         // Only receive
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
       } else {
         // Receive and Send
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         if (my_rank == (n_tasks-1))
           MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
         else
@@ -58,16 +60,18 @@ void constant(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
     for (int it_rank=my_rank; it_rank<sizeB ;it_rank+=n_tasks){
       if (it_rank == 0){
         // Only send
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB){
         // Only receive
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
       } else {
         // Receive and Send
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        process(my_rank, it_rank, sizeA, *i);
+        process(my_rank, it_rank, sizeA, *i, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         if (my_rank == (n_tasks-1))
           MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
         else
@@ -78,11 +82,11 @@ void constant(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
 }
 
 
-void dec_process(int my_rank, int it_rank, int sizeA, int i, int l){
+void dec_process(int my_rank, int it_rank, int sizeA, int i, int l, int *nums){
   int k = it_rank + 1;
   if (k >= l){
     int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
-    printf("Rank %d, M[%2d,%2d], M[%2d,%2d]\n", my_rank, k, i-k+1, lin, col);
+    printf("Rank %d, M[%2d,%2d], M[%2d,%2d], num[0] = %d, num[1] = %d\n", my_rank, k, i-k+1, lin, col, nums[0], nums[1]);
   }
 }
 
@@ -98,16 +102,18 @@ void decreasing(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
     for (int it_rank=my_rank; it_rank<sizeB ;it_rank+=n_tasks){
       if (it_rank == 0){
         // Only send
-        dec_process(my_rank, it_rank, sizeA, *i, l);
+        dec_process(my_rank, it_rank, sizeA, *i, l, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB){
         // Only receive
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        dec_process(my_rank, it_rank, sizeA, *i, l);
+        dec_process(my_rank, it_rank, sizeA, *i, l, nums);
       } else {
         // Receive and Send
         MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
-        dec_process(my_rank, it_rank, sizeA, *i, l);
+        dec_process(my_rank, it_rank, sizeA, *i, l, nums);
+        nums[0] = it_rank+1; nums[1] = *i-it_rank;
         if (my_rank == (n_tasks-1))
           MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
         else

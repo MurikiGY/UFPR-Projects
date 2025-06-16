@@ -8,8 +8,6 @@
 #include "./src/original.h"
 #include "./src/diag_mem.h"
 
-#define STD_TAG 0
-
 #ifndef swap
 #define swap(x, y) do { typeof(x) SWAP = x; x = y; y = SWAP; } while (0)
 #endif
@@ -65,27 +63,26 @@ char* read_seq(char *fname) {
 }
 
 
- mtype originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
+ void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
   //printf("--> SizeA: %d\n", sizeA);
   //printf("--> SizeB: %d\n", sizeB);
 
-	// allocate LCS score matrix
+	// Allocate LCS score matrix
   //struct timeval matrix_alloc_time = start_timer();
 	mtype **scoreMatrix = allocateScoreMatrix(sizeA, sizeB);
   //show_time("Matrix allocate time", matrix_alloc_time);
 
-	//initialize LCS score matrix
+	// Initialize LCS score matrix
   //struct timeval matrix_init_time = start_timer();
 	initScoreMatrix(scoreMatrix, sizeA, sizeB);
   //show_time("Matrix init time", matrix_init_time);
 
-	//fill up the rest of the matrix and return final score (element locate at the last line and collumn)
+	// Fill up the rest of the matrix and return final score (element locate at the last line and collumn)
   //struct timeval lcs_time = start_timer();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
   //show_time("LCS time", lcs_time);
 
-	/* if you wish to see the entire score matrix,
-	 for debug purposes, define DEBUGMATRIX. */
+	/* if you wish to see the entire score matrix, for debug purposes, define DEBUGMATRIX. */
 #ifdef DEBUGMATRIX
 	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 #endif
@@ -93,42 +90,36 @@ char* read_seq(char *fname) {
 	//print score and free matrix
 	printf("Score: %d\n", score);
 	freeScoreMatrix(scoreMatrix, sizeB);
-
-  return score;
 }
 
 
 
-mtype diagLCS(int sizeA, int sizeB, char *seqA, char *seqB){
+void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
 
   // Swap strings to matrix always have more columns than lines
-  if (sizeB > sizeA){
-    swap(seqA, seqB);
-    swap(sizeA, sizeB);
-  }
+  if (sizeB > sizeA){ swap(seqA, seqB); swap(sizeA, sizeB); }
   //printf("--> SizeA: %d\n", sizeA);
   //printf("--> SizeB: %d\n", sizeB);
 
-	// allocate LCS score matrix
+	// Allocate LCS score matrix
   //struct timeval matrix_alloc_time = start_timer();
 	mtype **scoreMatrix = diagAllocateScoreMatrix(sizeA, sizeB);
   //show_time("Matrix allocate time", matrix_alloc_time);
 
-	//initialize LCS score matrix
+	// Initialize LCS score matrix
   //struct timeval matrix_init_time = start_timer();
 	diagInitScoreMatrix(scoreMatrix, sizeA, sizeB);
   //show_time("Matrix init time", matrix_init_time);
 
-	//fill up the rest of the matrix and return final score
+	// Fill up the rest of the matrix and return final score
   //struct timeval lcs_time = start_timer();
-	mtype score = diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+	//diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+	MPIDiagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
   //show_time("LCS time", lcs_time);
 
-	//print score and free matrix
+	// Print score and free matrix
 	//printf("Score: %d\n", score);
 	diagFreeScoreMatrix(scoreMatrix, sizeA, sizeB);
-
-  return score;
 }
 
 
@@ -142,8 +133,8 @@ int main(int argc, char** argv) {
   int sizeA, sizeB;
 
   // Read both sequences
-  seqA = read_seq("./inputs/fileA25.in");
-  seqB = read_seq("./inputs/fileB25.in");
+  seqA = read_seq("./inputs/fileA1.in");
+  seqB = read_seq("./inputs/fileB1.in");
 
   //find out sizes
   sizeA = strlen(seqA);
@@ -151,34 +142,20 @@ int main(int argc, char** argv) {
 
   // Initialize MPI environment
   int my_rank, n_tasks;
-  MPI_Status status;
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &n_tasks);
 
   // --- Start Tests
   
-  //mtype score = originalLCS(sizeA, sizeB, seqA, seqB);
-  mtype score = diagLCS(sizeA, sizeB, seqA, seqB);
+  originalLCS(sizeA, sizeB, seqA, seqB);
+  //diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
 
   // --- Comunication
 
-  printf("Rank %d: %d\n", my_rank, score);
+  //  // Show exec time
   if (my_rank == 0)
     show_time("Gloal time", global_time);
-
-  //if (my_rank != 0){
-  //  MPI_Send(&score, 1, MPI_SHORT_INT, 0, STD_TAG, MPI_COMM_WORLD);
-  //} else {
-  //  printf("Rank 0: %d\n", score);
-  //  for (int i=1; i<n_tasks ;i++){
-  //    MPI_Recv(&score, 1, MPI_SHORT_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-  //    printf("Rank %d: %d\n", status.MPI_SOURCE, score);
-  //  }
-
-  //  // Show exec time
-  //  show_time("Gloal time", global_time);
-  //}
 
   // --- Finished
 

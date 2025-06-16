@@ -25,24 +25,18 @@ void increasing(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
 
     // it_rank = i'th diagonal index
     for (int it_rank=my_rank; it_rank<*i ;it_rank+=n_tasks){
-      if (it_rank == 0){
-        // Only send
+      if (it_rank == 0){                // Only send
         process(my_rank, it_rank, sizeA, *i, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
-      } else if (it_rank == sizeB){
-        // Only receive
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+      } else if (it_rank == sizeB-1){   // Only receive
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(my_rank, it_rank, sizeA, *i, nums);
-      } else {
-        // Receive and Send
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+      } else {                          // Receive and Send
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(my_rank, it_rank, sizeA, *i, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
-        if (my_rank == (n_tasks-1))
-          MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
-        else
-          MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Send(nums, 2, MPI_INT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -63,19 +57,15 @@ void constant(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
         process(my_rank, it_rank, sizeA, *i, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
-      } else if (it_rank == sizeB){
+      } else if (it_rank == sizeB-1){
         // Only receive
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(my_rank, it_rank, sizeA, *i, nums);
-      } else {
-        // Receive and Send
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+      } else { // Receive and Send
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(my_rank, it_rank, sizeA, *i, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
-        if (my_rank == (n_tasks-1))
-          MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
-        else
-          MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Send(nums, 2, MPI_INT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -101,23 +91,17 @@ void decreasing(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
 
     for (int it_rank=my_rank; it_rank<sizeB ;it_rank+=n_tasks){
       if (it_rank == 0){
-        // Only send
         dec_process(my_rank, it_rank, sizeA, *i, l, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
         MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
-      } else if (it_rank == sizeB){
-        // Only receive
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+      } else if (it_rank == sizeB-1){
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         dec_process(my_rank, it_rank, sizeA, *i, l, nums);
       } else {
-        // Receive and Send
-        MPI_Recv(nums, 2, MPI_INT, my_rank-1, STD_TAG, MPI_COMM_WORLD, &status);
+        MPI_Recv(nums, 2, MPI_INT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         dec_process(my_rank, it_rank, sizeA, *i, l, nums);
         nums[0] = it_rank+1; nums[1] = *i-it_rank;
-        if (my_rank == (n_tasks-1))
-          MPI_Send(nums, 2, MPI_INT, 0, STD_TAG, MPI_COMM_WORLD);
-        else
-          MPI_Send(nums, 2, MPI_INT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Send(nums, 2, MPI_INT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -126,8 +110,8 @@ void decreasing(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
 
 
 int main(int argc, char** argv){
-  int sizeA = 7;
-  int sizeB = 5;
+  int sizeA = 9;
+  int sizeB = 8;
 
   if (sizeA < sizeB)
     swap(sizeA, sizeB);
@@ -173,10 +157,14 @@ int main(int argc, char** argv){
   // i = Diagonal iterator
   int i;
 
+
+  // 4 Horseman of comunication
+  // 1 - At the start, only Send
+  // 2 - At the end, only Receive
+  // 3 - If rank == 0, receive from n_task-1 
+  // 4 - If rank == n_task-1 send to 0
   increasing(my_rank, n_tasks, sizeA, sizeB, &i);
-
   constant(my_rank, n_tasks, sizeA, sizeB, &i);
-
   decreasing(my_rank, n_tasks, sizeA, sizeB, &i);
 
 

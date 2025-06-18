@@ -75,7 +75,7 @@ void constant(int my_rank, int n_tasks, int sizeA, int sizeB, int *i){
 void dec_process(int my_rank, int it_rank, int sizeA, int i, int l, int *nums){
   int k = it_rank + 1;
   if (k >= l){
-    int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
+    int lin = i+1; int col = k - (lin - sizeA)*(lin/(sizeA+1));
     printf("Rank %d, M[%2d,%2d], M[%2d,%2d], num[0] = %d, num[1] = %d\n", my_rank, k, i-k+1, lin, col, nums[0], nums[1]);
   }
 }

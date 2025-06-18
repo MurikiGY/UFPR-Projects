@@ -125,10 +125,10 @@ void dec_process(mtype **scoreMatrix, int sizeA, char *seqA, char *seqB, int my_
     //int lin = i+1; int col = k - (lin - sizeA)*(lin/sizeA);
     //printf("Rank %d, M[%2d,%2d], M[%2d,%2d], num[0] = %d, num[1] = %d\n", my_rank, k, i-k+1, lin, col, nums[0], nums[1]);
     
-    int lin = i+1;    int col = k - (lin - sizeA)*(lin/sizeA);
-    //int lin2 = i;     int col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);   // Up position
-    int lin3 = i;     int col3 = k - (lin3 - sizeA)*(lin3/sizeA);         // Left position
-    //int lin4 = i-1;   int col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);   // Diag position
+    int lin = i+1;    int col = k - (lin - sizeA)*(lin/(sizeA+1));
+    //int lin2 = i;     int col2 = (k-1) - (lin2 - sizeA)*(lin2/sizeA);     // Up position
+    int lin3 = i;     int col3 = k - (lin3 - sizeA)*(lin3/(sizeA+1));       // Left position
+    //int lin4 = i-1;   int col4 = (k-1) - (lin4 - sizeA)*(lin4/sizeA);     // Diag position
 
     if (seqA[i-k] == seqB[k-1]) { scoreMatrix[lin][col] = nums[1] + 1;
     } else { scoreMatrix[lin][col] = max(nums[0], scoreMatrix[lin3][col3]); }

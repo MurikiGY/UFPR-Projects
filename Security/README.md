@@ -5,6 +5,8 @@
 
 
 ## Network common tools
+- whois
+- nslookup
 - tcpdump
 - netstat
 - nc (netcat)

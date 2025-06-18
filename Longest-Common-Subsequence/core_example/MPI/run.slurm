@@ -5,7 +5,7 @@
 #SBATCH --ntasks=12			# Number of tasks
 #SBATCH --cpus-per-task=1		# Number of CPUs each task uses (-c)
 #SBATCH --output=output_%j.log		# Standard output and error log (-o)
-#SBATCH --mem=1g 			# Memory per node (in MB)
+#SBATCH --mem=15g 			# Memory per node (in MB)
 #SBATCH --time=01:00:00			# Time limit (hh:mm:ss) (-t)
 
 # -----

@@ -152,7 +152,8 @@ void increasing(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seq
       if (it_rank == 0){
         // Only send
         process(scoreMatrix, sizeA, seqA, seqB, my_rank, it_rank, *i, nums);
-        MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB-1){
         // Only receive
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
@@ -161,7 +162,8 @@ void increasing(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seq
         // Receive and Send
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(scoreMatrix, sizeA, seqA, seqB, my_rank, it_rank, *i, nums);
-        MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -180,7 +182,8 @@ void constant(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seqB,
       if (it_rank == 0){
         // Only send
         process(scoreMatrix, sizeA, seqA, seqB, my_rank, it_rank, *i, nums);
-        MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB-1){
         // Only receive
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
@@ -189,7 +192,8 @@ void constant(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seqB,
         // Receive and Send
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         process(scoreMatrix, sizeA, seqA, seqB, my_rank, it_rank, *i, nums);
-        MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -208,7 +212,8 @@ void decreasing(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seq
       if (it_rank == 0){
         // Only send
         dec_process(scoreMatrix, sizeA, seqA, seqB, my_rank,it_rank, *i, l, nums);
-        MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, my_rank+1, STD_TAG, MPI_COMM_WORLD);
       } else if (it_rank == sizeB-1){
         // Only receive
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
@@ -217,7 +222,8 @@ void decreasing(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seq
         // Receive and Send
         MPI_Recv(nums, 2, MPI_SHORT, MPI_ANY_SOURCE, STD_TAG, MPI_COMM_WORLD, &status);
         dec_process(scoreMatrix, sizeA, seqA, seqB, my_rank,it_rank, *i, l, nums);
-        MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        //MPI_Send(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
+        MPI_Bsend(nums, 2, MPI_SHORT, (my_rank + 1) % n_tasks, STD_TAG, MPI_COMM_WORLD);
       }
     }
   }
@@ -231,8 +237,8 @@ void MPIDiagMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *
   constant(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks, &i);
   decreasing(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks, &i);
 
-  //if (my_rank == (n_tasks+1)%sizeB)
-  printf("Rank: %d, Score: %d\n", my_rank, scoreMatrix[sizeA+sizeB][0]);
+  if (my_rank == ((sizeB-1) % n_tasks))
+    printf("Rank: %d, Score: %d\n", my_rank, scoreMatrix[sizeA+sizeB][0]);
 }
 
 

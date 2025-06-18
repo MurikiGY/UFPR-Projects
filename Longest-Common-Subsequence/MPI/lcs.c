@@ -133,8 +133,8 @@ int main(int argc, char** argv) {
   int sizeA, sizeB;
 
   // Read both sequences
-  seqA = read_seq("./inputs/fileA1.in");
-  seqB = read_seq("./inputs/fileB1.in");
+  seqA = read_seq("./inputs/fileA10.in");
+  seqB = read_seq("./inputs/fileB10.in");
 
   //find out sizes
   sizeA = strlen(seqA);
@@ -145,11 +145,15 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &n_tasks);
+  // Create a buffer for buffered sends
+  int buffer_size = 2048;
+  char *buffer = (char *)malloc(buffer_size);
+  MPI_Buffer_attach(buffer, buffer_size);
 
   // --- Start Tests
   
-  originalLCS(sizeA, sizeB, seqA, seqB);
-  //diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  //originalLCS(sizeA, sizeB, seqA, seqB);
+  diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
 
   // --- Comunication
 
@@ -160,5 +164,8 @@ int main(int argc, char** argv) {
   // --- Finished
 
   // Finalize MPI environment.
+  // Detach the buffer
+  MPI_Buffer_detach(&buffer, &buffer_size);
+  free(buffer);
   MPI_Finalize();
 }

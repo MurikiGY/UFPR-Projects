@@ -7,6 +7,7 @@
 #include "./src/chron.h"
 #include "./src/original.h"
 #include "./src/diag_mem.h"
+#include "./src/linear.h"
 
 #ifndef swap
 #define swap(x, y) do { typeof(x) SWAP = x; x = y; y = SWAP; } while (0)
@@ -123,6 +124,28 @@ void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_ta
 }
 
 
+void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
+  mtype **scoreMatrix;
+
+  // Swap strings to matrix always have more columns than lines
+  if (sizeB > sizeA){ swap(seqA, seqB); swap(sizeA, sizeB); }
+  //printf("--> SizeA: %d\n", sizeA);
+  //printf("--> SizeB: %d\n", sizeB);
+
+	// Allocate LCS score matrix
+  scoreMatrix = LinearAllocateScoreMatrix(sizeA, sizeB, my_rank, n_tasks);
+
+	// Initialize LCS score matrix
+	linearInitScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
+
+  // Run LCS
+	MPILinearMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+
+  // Free matrix
+	LinearFreeScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
+}
+
+
 
 int main(int argc, char** argv) {
   // Global exec time
@@ -145,15 +168,12 @@ int main(int argc, char** argv) {
   MPI_Init(&argc, &argv);
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &n_tasks);
-  // Create a buffer for buffered sends
-  int buffer_size = 2048;
-  char *buffer = (char *)malloc(buffer_size);
-  MPI_Buffer_attach(buffer, buffer_size);
 
   // --- Start Tests
   
   //originalLCS(sizeA, sizeB, seqA, seqB);
-  diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  //diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
 
   // --- Comunication
 
@@ -164,8 +184,5 @@ int main(int argc, char** argv) {
   // --- Finished
 
   // Finalize MPI environment.
-  // Detach the buffer
-  MPI_Buffer_detach(&buffer, &buffer_size);
-  free(buffer);
   MPI_Finalize();
 }

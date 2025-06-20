@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <mpi.h>
 
 #ifndef max
@@ -37,17 +38,17 @@ void linearInitScoreMatrix(mtype **scoreMatrix, int sizeA, int sizeB, int my_ran
 // Run LCS
 void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
   MPI_Status status;
-  short recv_nums[2] = {0};
-  short send_nums[2] = {0};
   int size = sizeB / n_tasks;
   if (my_rank < (sizeB % n_tasks)) size++;
+  short recv_nums[2] = {0}, send_nums[2] = {0};
 
   int i = 0;
   if (my_rank == 0){
     for (int j=1; j<=sizeA ;j++){
       if (seqA[j-1] == seqB[0]) { scoreMatrix[i][j] = 1;
       } else { scoreMatrix[i][j] = scoreMatrix[i][j-1]; }
-      send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
       MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   } else {
@@ -55,7 +56,8 @@ void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char
       MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
       if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
       } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
       MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }
@@ -67,7 +69,8 @@ void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char
       MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
       if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
       } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
       MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }
@@ -83,7 +86,8 @@ void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char
       MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
       if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
       } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
+      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
       MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }

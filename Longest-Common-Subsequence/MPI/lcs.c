@@ -4,7 +4,6 @@
 #include <sys/time.h>
 #include <mpi.h>
 
-#include "./src/chron.h"
 #include "./src/original.h"
 #include "./src/diag_mem.h"
 #include "./src/linear.h"
@@ -155,7 +154,7 @@ void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_
 	MPILinearMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
   MPI_Barrier(MPI_COMM_WORLD);
   finish = MPI_Wtime();
-  if (my_rank == 0) printf("LCS time: %f s \n", finish - start);
+  if (my_rank == 0) printf("LCS %d time: %f s \n", sizeA, finish - start);
 
   // Free matrix
 	LinearFreeScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
@@ -169,12 +168,12 @@ int main(int argc, char** argv) {
   int sizeA, sizeB;
 
   // Read both sequences
-  seqA = read_seq("./inputs/fileA1.in");
-  seqB = read_seq("./inputs/fileB1.in");
+  seqA = read_seq("./inputs/fileA40.in");
+  seqB = read_seq("./inputs/fileB40.in");
 
   //find out sizes
-  sizeA = strlen(seqA);
-  sizeB = strlen(seqB);
+  //sizeA = strlen(seqA);
+  //sizeB = strlen(seqB);
 
   // Initialize MPI environment
   int my_rank, n_tasks;
@@ -187,9 +186,13 @@ int main(int argc, char** argv) {
   //double start = MPI_Wtime();
 
   // --- Start Tests
-
-  //originalLCS(sizeA, sizeB, seqA, seqB);
-  linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  int step = 500;
+  for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
+    for (int i=0; i<20 ;i++){
+      //originalLCS(sizeA, sizeB, seqA, seqB);
+      linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+    }
+  }
 
   //MPI_Barrier(MPI_COMM_WORLD);
   //double finish = MPI_Wtime();

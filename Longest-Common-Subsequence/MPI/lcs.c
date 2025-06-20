@@ -126,6 +126,7 @@ void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_ta
 
 void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
   mtype **scoreMatrix;
+  double start, finish;
 
   // Swap strings to matrix always have more columns than lines
   if (sizeB > sizeA){ swap(seqA, seqB); swap(sizeA, sizeB); }
@@ -133,13 +134,28 @@ void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_
   //printf("--> SizeB: %d\n", sizeB);
 
 	// Allocate LCS score matrix
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //start = MPI_Wtime();
   scoreMatrix = LinearAllocateScoreMatrix(sizeA, sizeB, my_rank, n_tasks);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //finish = MPI_Wtime();
+  //if (my_rank == 0) printf("Alocate: %f s \n", finish - start);
 
 	// Initialize LCS score matrix
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //start = MPI_Wtime();
 	linearInitScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //finish = MPI_Wtime();
+  //if (my_rank == 0) printf("Init: %f s \n", finish - start);
 
   // Run LCS
+  MPI_Barrier(MPI_COMM_WORLD);
+  start = MPI_Wtime();
 	MPILinearMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  MPI_Barrier(MPI_COMM_WORLD);
+  finish = MPI_Wtime();
+  if (my_rank == 0) printf("LCS time: %f s \n", finish - start);
 
   // Free matrix
 	LinearFreeScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
@@ -148,16 +164,13 @@ void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_
 
 
 int main(int argc, char** argv) {
-  // Global exec time
-  struct timeval global_time = start_timer();
-
   // Sequence pointers and sizes for both sequences
   char *seqA, *seqB;
   int sizeA, sizeB;
 
   // Read both sequences
-  seqA = read_seq("./inputs/fileA10.in");
-  seqB = read_seq("./inputs/fileB10.in");
+  seqA = read_seq("./inputs/fileA1.in");
+  seqB = read_seq("./inputs/fileB1.in");
 
   //find out sizes
   sizeA = strlen(seqA);
@@ -169,17 +182,19 @@ int main(int argc, char** argv) {
   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
   MPI_Comm_size(MPI_COMM_WORLD, &n_tasks);
 
+  // Timer
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //double start = MPI_Wtime();
+
   // --- Start Tests
-  
+
   //originalLCS(sizeA, sizeB, seqA, seqB);
-  //diagLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
   linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
 
-  // --- Comunication
-
-  //  // Show exec time
-  if (my_rank == 0)
-    show_time("Gloal time", global_time);
+  //MPI_Barrier(MPI_COMM_WORLD);
+  //double finish = MPI_Wtime();
+  //if (my_rank == 0)
+  //  printf("Tempo: %f s \n", finish - start);
 
   // --- Finished
 

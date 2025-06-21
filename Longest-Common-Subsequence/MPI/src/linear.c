@@ -35,60 +35,87 @@ void linearInitScoreMatrix(mtype **scoreMatrix, int sizeA, int sizeB, int my_ran
 }
 
 
-// Run LCS
+// Run LCS, requirement: n_tasks <= sizeB
 void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
   MPI_Status status;
-  int size = sizeB / n_tasks;
-  if (my_rank < (sizeB % n_tasks)) size++;
-  short recv_nums[2] = {0}, send_nums[2] = {0};
+  int size  = sizeB / n_tasks; if (my_rank < (sizeB % n_tasks)) size++;
+  int block = sizeA / n_tasks;
+  short recv_nums[block+1], send_nums[block+1]; //block+1 because of the element in j-1
 
-  int i = 0;
+  int i = 0, j = 1, k = 0, l = 0;
+  int count = 0;  // Number of bytes received
   if (my_rank == 0){
-    for (int j=1; j<=sizeA ;j++){
-      if (seqA[j-1] == seqB[0]) { scoreMatrix[i][j] = 1;
-      } else { scoreMatrix[i][j] = scoreMatrix[i][j-1]; }
-      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
-      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
-      MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
+    for (j=1; j+block<(sizeA+1) ;j+=block){
+      for (k=0; k<block ;k++){
+        l = j+k;
+        if (seqA[l-1] == seqB[0]) { scoreMatrix[i][l] = 1;
+        } else { scoreMatrix[i][l] = scoreMatrix[i][l-1]; }
+      }
+      memcpy(send_nums, &scoreMatrix[i][j-1], (block+1)*sizeof(short));
+      MPI_Send(send_nums, block+1, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
+    for (k=0; j+k<(sizeA+1); k++){
+      l = j+k;
+      if (seqA[l-1] == seqB[0]) { scoreMatrix[i][l] = 1;
+      } else { scoreMatrix[i][l] = scoreMatrix[i][l-1]; }
+    }
+    memcpy(send_nums, &scoreMatrix[i][j-1], (k+1)*sizeof(short));
+    MPI_Send(send_nums, k+1, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
   } else {
-    for (int j=1; j<=sizeA ;j++){
-      MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
-      if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
-      } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
-      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
-      MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
+    for (j=1; j<(sizeA+1) ;j+=block){
+      MPI_Recv(recv_nums, block+1, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
+      MPI_Get_count(&status, MPI_SHORT, &count);
+      for (k=0; k<(count-1) ;k++){
+        l = j+k;
+        if (seqA[l-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][l] = recv_nums[k] + 1;
+        } else { scoreMatrix[i][l] = max(scoreMatrix[i][l-1], recv_nums[k+1]); }
+      }
+      memcpy(send_nums, &scoreMatrix[i][j-1], count*sizeof(short));
+      MPI_Send(send_nums, count, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }
 
+  // ---
+  
   i++;
   // i [1, size-1]
   for (; i<(size-1) ;i++){
-    for (int j=1; j<=sizeA ;j++){
-      MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
-      if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
-      } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
-      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
-      MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
+    for (j=1; j<(sizeA+1) ;j+=block){
+      MPI_Recv(recv_nums, block+1, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
+      MPI_Get_count(&status, MPI_SHORT, &count);
+      for (k=0; k<(count-1) ;k++){
+        l = j+k;
+        if (seqA[l-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][l] = recv_nums[k] + 1;
+        } else { scoreMatrix[i][l] = max(scoreMatrix[i][l-1], recv_nums[k+1]); }
+      }
+      memcpy(send_nums, &scoreMatrix[i][j-1], count*sizeof(short));
+      MPI_Send(send_nums, count, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }
 
+  // ---
+
   if (my_rank == ((sizeB-1) % n_tasks)){
-    for (int j=1; j<=sizeA ;j++){
-      MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
-      if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
-      } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
+    for (j=1; j<(sizeA+1) ;j+=block){
+      MPI_Recv(recv_nums, block+1, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
+      MPI_Get_count(&status, MPI_SHORT, &count);
+      for (k=0; k<(count-1) ;k++){
+        l = j+k;
+        if (seqA[l-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][l] = recv_nums[k] + 1;
+        } else { scoreMatrix[i][l] = max(scoreMatrix[i][l-1], recv_nums[k+1]); }
+      }
     }
   } else {
-    for (int j=1; j<=sizeA ;j++){
-      MPI_Recv(recv_nums, 2, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
-      if (seqA[j-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][j] = recv_nums[0] + 1;
-      } else { scoreMatrix[i][j] = max(scoreMatrix[i][j-1], recv_nums[1]); }
-      //send_nums[0] = scoreMatrix[i][j-1]; send_nums[1] = scoreMatrix[i][j];
-      memcpy(send_nums, &scoreMatrix[i][j-1], 2*sizeof(short));
-      MPI_Send(send_nums, 2, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
+    for (j=1; j<(sizeA+1) ;j+=block){
+      MPI_Recv(recv_nums, block+1, MPI_SHORT, (my_rank+n_tasks-1)%n_tasks, STD_TAG, MPI_COMM_WORLD, &status);
+      MPI_Get_count(&status, MPI_SHORT, &count);
+      for (k=0; k<(count-1) ;k++){
+        l = j+k;
+        if (seqA[l-1] == seqB[i*n_tasks+my_rank]) { scoreMatrix[i][l] = recv_nums[k] + 1;
+        } else { scoreMatrix[i][l] = max(scoreMatrix[i][l-1], recv_nums[k+1]); }
+      }
+      memcpy(send_nums, &scoreMatrix[i][j-1], count*sizeof(short));
+      MPI_Send(send_nums, count, MPI_SHORT, (my_rank+1)%n_tasks, STD_TAG, MPI_COMM_WORLD);
     }
   }
 

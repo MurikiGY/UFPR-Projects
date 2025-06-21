@@ -5,7 +5,7 @@
 #include <mpi.h>
 
 #include "./src/original.h"
-#include "./src/diag_mem.h"
+//#include "./src/diag_mem.h"
 #include "./src/linear.h"
 
 #ifndef swap
@@ -64,6 +64,7 @@ char* read_seq(char *fname) {
 
 
  void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
+  double start, finish;
   //printf("--> SizeA: %d\n", sizeA);
   //printf("--> SizeB: %d\n", sizeB);
 
@@ -79,7 +80,13 @@ char* read_seq(char *fname) {
 
 	// Fill up the rest of the matrix and return final score (element locate at the last line and collumn)
   //struct timeval lcs_time = start_timer();
+  MPI_Barrier(MPI_COMM_WORLD);
+  start = MPI_Wtime();
 	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+  MPI_Barrier(MPI_COMM_WORLD);
+  finish = MPI_Wtime();
+	printf("Score: %d\n", score);
+  printf("LCS %d time: %f s \n", sizeA, finish - start);
   //show_time("LCS time", lcs_time);
 
 	/* if you wish to see the entire score matrix, for debug purposes, define DEBUGMATRIX. */
@@ -87,44 +94,42 @@ char* read_seq(char *fname) {
 	printMatrix(seqA, seqB, scoreMatrix, sizeA, sizeB);
 #endif
 
-	//print score and free matrix
-	printf("Score: %d\n", score);
+	// free matrix
 	freeScoreMatrix(scoreMatrix, sizeB);
 }
 
 
 
-void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
-
-  // Swap strings to matrix always have more columns than lines
-  if (sizeB > sizeA){ swap(seqA, seqB); swap(sizeA, sizeB); }
-  //printf("--> SizeA: %d\n", sizeA);
-  //printf("--> SizeB: %d\n", sizeB);
-
-	// Allocate LCS score matrix
-  //struct timeval matrix_alloc_time = start_timer();
-	mtype **scoreMatrix = diagAllocateScoreMatrix(sizeA, sizeB);
-  //show_time("Matrix allocate time", matrix_alloc_time);
-
-	// Initialize LCS score matrix
-  //struct timeval matrix_init_time = start_timer();
-	diagInitScoreMatrix(scoreMatrix, sizeA, sizeB);
-  //show_time("Matrix init time", matrix_init_time);
-
-	// Fill up the rest of the matrix and return final score
-  //struct timeval lcs_time = start_timer();
-	//diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
-	MPIDiagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
-  //show_time("LCS time", lcs_time);
-
-	// Print score and free matrix
-	//printf("Score: %d\n", score);
-	diagFreeScoreMatrix(scoreMatrix, sizeA, sizeB);
-}
+//void diagLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
+//
+//  // Swap strings to matrix always have more columns than lines
+//  if (sizeB > sizeA){ swap(seqA, seqB); swap(sizeA, sizeB); }
+//  //printf("--> SizeA: %d\n", sizeA);
+//  //printf("--> SizeB: %d\n", sizeB);
+//
+//	// Allocate LCS score matrix
+//  //struct timeval matrix_alloc_time = start_timer();
+//	mtype **scoreMatrix = diagAllocateScoreMatrix(sizeA, sizeB);
+//  //show_time("Matrix allocate time", matrix_alloc_time);
+//
+//	// Initialize LCS score matrix
+//  //struct timeval matrix_init_time = start_timer();
+//	diagInitScoreMatrix(scoreMatrix, sizeA, sizeB);
+//  //show_time("Matrix init time", matrix_init_time);
+//
+//	// Fill up the rest of the matrix and return final score
+//  //struct timeval lcs_time = start_timer();
+//	//diagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+//	MPIDiagMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+//  //show_time("LCS time", lcs_time);
+//
+//	// Print score and free matrix
+//	//printf("Score: %d\n", score);
+//	diagFreeScoreMatrix(scoreMatrix, sizeA, sizeB);
+//}
 
 
 void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
-  mtype **scoreMatrix;
   double start, finish;
 
   // Swap strings to matrix always have more columns than lines
@@ -135,7 +140,7 @@ void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_
 	// Allocate LCS score matrix
   //MPI_Barrier(MPI_COMM_WORLD);
   //start = MPI_Wtime();
-  scoreMatrix = LinearAllocateScoreMatrix(sizeA, sizeB, my_rank, n_tasks);
+  mtype **scoreMatrix = LinearAllocateScoreMatrix(sizeA, sizeB, my_rank, n_tasks);
   //MPI_Barrier(MPI_COMM_WORLD);
   //finish = MPI_Wtime();
   //if (my_rank == 0) printf("Alocate: %f s \n", finish - start);
@@ -186,11 +191,18 @@ int main(int argc, char** argv) {
   //double start = MPI_Wtime();
 
   // --- Start Tests
-  int step = 500;
-  for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
-    for (int i=0; i<20 ;i++){
-      //originalLCS(sizeA, sizeB, seqA, seqB);
-      linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+  int step = 10000;
+  if (n_tasks == 1){
+    for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
+      for (int i=0; i<20 ;i++){
+        originalLCS(sizeA, sizeB, seqA, seqB);
+      }
+    }
+  } else {
+    for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
+      for (int i=0; i<20 ;i++){
+        linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+      }
     }
   }
 

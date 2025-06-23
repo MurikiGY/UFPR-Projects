@@ -38,8 +38,8 @@ void linearInitScoreMatrix(mtype **scoreMatrix, int sizeA, int sizeB, int my_ran
 // Run LCS, requirement: n_tasks <= sizeB
 void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
   MPI_Status status;
-  int size  = sizeB / n_tasks; if (my_rank < (sizeB % n_tasks)) size++;
-  int block = sizeA / n_tasks;
+  int size = sizeB / n_tasks; if (my_rank < (sizeB % n_tasks)) size++;
+  int block = 1024;
   short recv_nums[block+1], send_nums[block+1]; //block+1 because of the element in j-1
 
   int i = 0, j = 1, k = 0, l = 0;
@@ -120,8 +120,8 @@ void MPILinearMemLCS(mtype **scoreMatrix, int sizeA, int sizeB, char *seqA, char
   }
 
   // Show result
-  if (my_rank == ((sizeB-1) % n_tasks))
-    printf("Score: %d\n", scoreMatrix[size-1][sizeA]);
+  //if (my_rank == ((sizeB-1) % n_tasks))
+  //  printf("Score: %d\n", scoreMatrix[size-1][sizeA]);
 }
 
 

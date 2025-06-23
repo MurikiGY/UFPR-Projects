@@ -63,7 +63,7 @@ char* read_seq(char *fname) {
 }
 
 
- void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB){
+ void originalLCS(int sizeA, int sizeB, char *seqA, char *seqB, int cat){
   double start, finish;
   //printf("--> SizeA: %d\n", sizeA);
   //printf("--> SizeB: %d\n", sizeB);
@@ -82,11 +82,11 @@ char* read_seq(char *fname) {
   //struct timeval lcs_time = start_timer();
   MPI_Barrier(MPI_COMM_WORLD);
   start = MPI_Wtime();
-	mtype score = LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
+	LCS(scoreMatrix, sizeA, sizeB, seqA, seqB);
   MPI_Barrier(MPI_COMM_WORLD);
   finish = MPI_Wtime();
-	printf("Score: %d\n", score);
-  printf("LCS %d time: %f s \n", sizeA, finish - start);
+  printf("Cat %d: %.3f s \n", cat, finish - start);
+	//printf("Score: %d\n", score);
   //show_time("LCS time", lcs_time);
 
 	/* if you wish to see the entire score matrix, for debug purposes, define DEBUGMATRIX. */
@@ -129,7 +129,7 @@ char* read_seq(char *fname) {
 //}
 
 
-void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks){
+void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_tasks, int cat){
   double start, finish;
 
   // Swap strings to matrix always have more columns than lines
@@ -159,7 +159,8 @@ void linearLCS(int sizeA, int sizeB, char *seqA, char *seqB, int my_rank, int n_
 	MPILinearMemLCS(scoreMatrix, sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
   MPI_Barrier(MPI_COMM_WORLD);
   finish = MPI_Wtime();
-  if (my_rank == 0) printf("LCS %d time: %f s \n", sizeA, finish - start);
+  if (my_rank == 0) //printf("LCS %d time: %f s \n", sizeA, finish - start);
+    printf("Cat %d: %.3f s \n", cat, finish - start);
 
   // Free matrix
 	LinearFreeScoreMatrix(scoreMatrix, sizeA, sizeB, my_rank, n_tasks);
@@ -191,17 +192,21 @@ int main(int argc, char** argv) {
   //double start = MPI_Wtime();
 
   // --- Start Tests
-  int step = 10000;
+  int step = 10000, cat = 0;
   if (n_tasks == 1){
-    for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
-      for (int i=0; i<20 ;i++){
-        originalLCS(sizeA, sizeB, seqA, seqB);
+    for (sizeA=step; sizeA<=4*step ;sizeA+=step){
+      for (sizeB=sizeA; sizeB<=4*step ;sizeB+=step){
+        for (int i=0; i<20 ;i++)
+          originalLCS(sizeA, sizeB, seqA, seqB, cat);
+        cat++;
       }
     }
   } else {
-    for (sizeA=step, sizeB=step; sizeA<=4*step ;sizeA+=step, sizeB+=step){
-      for (int i=0; i<20 ;i++){
-        linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks);
+    for (sizeA=step; sizeA<=4*step ;sizeA+=step){
+      for (sizeB=sizeA; sizeB<=4*step ;sizeB+=step){
+        for (int i=0; i<20 ;i++)
+          linearLCS(sizeA, sizeB, seqA, seqB, my_rank, n_tasks, cat);
+        cat++;
       }
     }
   }

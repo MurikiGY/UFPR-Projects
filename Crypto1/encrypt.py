@@ -22,7 +22,8 @@ def vinegere(key, raw_text, crypted_text):
     for token in raw_text:
         if i == key_size:
             i = 0
-        crypted_text.append(chr(ord(token)+ord(key_vec[i])))
+        # Mod because of the chr 0x110000 (1114112 ₁₀) input limit
+        crypted_text.append(chr((ord(token)+ord(key_vec[i])) % 1114111))
         key_vec[i] = token
         i+=1; j+=1
 
@@ -31,10 +32,10 @@ def vinegere(key, raw_text, crypted_text):
  The key represents the number of columns
 """
 def rail_fence(key, raw_text, crypted_text):
-    print("=== Rail Fence", f'Key: {key} ===')
+    #print("=== Rail Fence", f'Key: {key} ===')
     
-    #for i in range(key):
-    #    crypted_text.append(raw_text[i:])
+    for i in range(key):
+        crypted_text += raw_text[i::key]
 
 
 
@@ -65,18 +66,22 @@ transform_loop = sum_digits(date[4:8])
 raw_text = list(); crypted_text = list()
 for line in sys.stdin:
     raw_text += line
-print(f'Raw: {raw_text}')
+#print(f'Raw: {raw_text}')
 
-print(f'\n- Replace loops {replace_loop}')
+# Vigenere
+#print(f'\n- Replace loops {replace_loop}')
 for _ in range(replace_loop):
     vinegere(date[:2], raw_text, crypted_text)
     raw_text = crypted_text.copy()
     crypted_text.clear()
+#print(f'Vinegere: {raw_text}')
 
-print(f'Vinegere: {raw_text}')
+# Rail Fence
+#print(f'\n- Transform loops {transform_loop}')
+for _ in range(transform_loop):
+    rail_fence(int(date[2:4]), raw_text, crypted_text)
+    raw_text = crypted_text.copy()
+    crypted_text.clear()
 
-print(f'\n- Transform loops {transform_loop}')
-#for _ in range(transform_loop):
-rail_fence(int(date[2:4]), raw_text, crypted_text)
-
-print(f'Rail Fence: {crypted_text}')
+#print(f'Rail Fence: {raw_text}')
+print(''.join(raw_text))

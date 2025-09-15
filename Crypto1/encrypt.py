@@ -18,14 +18,15 @@ def vinegere(key, raw_text, crypted_text):
     key_size = len(key)
     #print("=== Vinegere", f'Key: {key}', f'Len: {key_size} ===')
 
-    i = 0; j = 0;
+    i = 0;
     for token in raw_text:
         if i == key_size:
             i = 0
         # Mod because of the chr 0x110000 (1114112 ₁₀) input limit
-        crypted_text.append(chr((ord(token)+ord(key_vec[i])) % 1114111))
+        crypted_text.append(chr((ord(token)+ord(key_vec[i])) % 1114112))
         key_vec[i] = token
-        i+=1; j+=1
+        i+=1;
+
 
 """
  Processes the key as a number
@@ -64,6 +65,7 @@ transform_loop = sum_digits(date[4:8])
 
 # Read input
 raw_text = list(); crypted_text = list()
+
 for line in sys.stdin:
     raw_text += line
 #print(f'Raw: {raw_text}')
@@ -84,4 +86,6 @@ for _ in range(transform_loop):
     crypted_text.clear()
 
 #print(f'Rail Fence: {raw_text}')
+
+
 print(''.join(raw_text))

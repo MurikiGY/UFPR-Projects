@@ -42,15 +42,15 @@ def de_rail_fence(key, raw_text, decrypted_text):
     # Append the complete lines
     for i in range(num_lines):
         j = i
-        for _ in range(remainder-1):
+        for _ in range(remainder):
             decrypted_text.append(raw_text[j])
             j += num_lines+1
-        for _ in range(key-remainder+1):
+        for _ in range(key-remainder):
             decrypted_text.append(raw_text[j])
             j += num_lines
 
     # Append the last incomplete line
-    for i in range(remainder-1):
+    for i in range(remainder):
         decrypted_text.append(raw_text[num_lines+i*(num_lines+1)])
 
 
@@ -79,10 +79,10 @@ for line in sys.stdin:
 
 # === Rail Fence
 #print(f'\n- Transform loops {transform_loop}')
-#for _ in range(transform_loop):
-de_rail_fence(int(date[2:4]), raw_text, crypted_text)
-raw_text = crypted_text.copy()
-crypted_text.clear()
+for _ in range(transform_loop):
+    de_rail_fence(int(date[2:4]), raw_text, crypted_text)
+    raw_text = crypted_text.copy()
+    crypted_text.clear()
 #print(f'Rail Fence: {raw_text}')
 
 # === Vigenere

@@ -77,10 +77,10 @@ for _ in range(replace_loop):
 
 # === Rail Fence
 #print(f'\n- Transform loops {transform_loop}')
-#for _ in range(transform_loop):
-#    rail_fence(int(date[2:4]), raw_text, crypted_text)
-#    raw_text = crypted_text.copy()
-#    crypted_text.clear()
+for _ in range(transform_loop):
+    rail_fence(int(date[2:4]), raw_text, crypted_text)
+    raw_text = crypted_text.copy()
+    crypted_text.clear()
 #print(f'Rail Fence: {raw_text}')
 
 print(''.join(raw_text), end='')

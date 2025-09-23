@@ -7,7 +7,7 @@
 
 import sys
 
-modValue = 1114112
+modValue = 0x11000 #0xD800
 
 def sum_digits(digit):
     return sum(int(x) for x in digit)
@@ -21,8 +21,6 @@ def de_vinegere(key, raw_text, decrypted_text):
     #print("=== Vinegere", f'Key: {key}', f'Len: {key_size} ===')
 
     i = 0;
-
-    
     for token in raw_text:
         if i == key_size:
             i = 0
@@ -79,18 +77,18 @@ for line in sys.stdin:
 
 # === Rail Fence
 #print(f'\n- Transform loops {transform_loop}')
-for _ in range(transform_loop):
-    de_rail_fence(int(date[2:4]), raw_text, crypted_text)
-    raw_text = crypted_text.copy()
-    crypted_text.clear()
+#for _ in range(transform_loop):
+#    de_rail_fence(int(date[2:4]), raw_text, crypted_text)
+#    raw_text = crypted_text.copy()
+#    crypted_text.clear()
 #print(f'Rail Fence: {raw_text}')
 
 # === Vigenere
 #print(f'\n- Replace loops {replace_loop}')
-#for _ in range(replace_loop):
-#    de_vinegere(date[:2], raw_text, crypted_text)
-#    raw_text = crypted_text.copy()
-#    crypted_text.clear()
+for _ in range(replace_loop):
+    de_vinegere(date[:2], raw_text, crypted_text)
+    raw_text = crypted_text.copy()
+    crypted_text.clear()
 #print(f'Vinegere: {raw_text}')
 
 print(''.join(raw_text), end='')

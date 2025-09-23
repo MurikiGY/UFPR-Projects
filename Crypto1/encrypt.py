@@ -6,8 +6,9 @@
 """
 
 import sys
+import unicodedata as ud
 
-modValue = 1114112
+modValue = 0x11000 # 0xD800
 
 def sum_digits(digit):
     return sum(int(x) for x in digit)
@@ -25,7 +26,9 @@ def vinegere(key, raw_text, crypted_text):
         if i == key_size:
             i = 0
         # Mod because of the chr 0x110000 (1114112 ₁₀) input limit
-        crypted_text.append(chr((ord(token)+ord(key_vec[i])) % modValue))
+        a = (ord(token)+ord(key_vec[i])) % modValue
+        if ud.category(chr(a)) == 'Cs': a += modValue
+        crypted_text.append(chr(a))
         key_vec[i] = token
         i+=1;
 
@@ -66,18 +69,18 @@ for line in sys.stdin:
 
 # === Vigenere
 #print(f'\n- Replace loops {replace_loop}')
-#for _ in range(replace_loop):
-#    vinegere(date[:2], raw_text, crypted_text)
-#    raw_text = crypted_text.copy()
-#    crypted_text.clear()
+for _ in range(replace_loop):
+    vinegere(date[:2], raw_text, crypted_text)
+    raw_text = crypted_text.copy()
+    crypted_text.clear()
 #print(f'Vinegere: {raw_text}')
 
 # === Rail Fence
 #print(f'\n- Transform loops {transform_loop}')
-for _ in range(transform_loop):
-    rail_fence(int(date[2:4]), raw_text, crypted_text)
-    raw_text = crypted_text.copy()
-    crypted_text.clear()
+#for _ in range(transform_loop):
+#    rail_fence(int(date[2:4]), raw_text, crypted_text)
+#    raw_text = crypted_text.copy()
+#    crypted_text.clear()
 #print(f'Rail Fence: {raw_text}')
 
 print(''.join(raw_text), end='')
